@@ -1,93 +1,70 @@
-const inquirer = require("inquirer");
-const Queries = require ("./Queries");
-const connection = require("./connection");
-const query = new Queries(connection);
+const inquirer = require('inquirer');
+const { employeeView } = require('./Queries');
+const query = require('./Queries');
 
-const startInquirer = [
+
+const startInquire = [
     {
-        type: "list",
-        name: "action",
-        message: "What would you like to do?",
-        choices: ["View all Employees", "Add Employee", "Update Employee", "Delete Employee", 
-        "Add Department", "View Departments", "Add Role", "View Role", "View Employees by Manager"]
+        type: 'list',
+        name: 'action',
+        message: 'What would you like to do?',
+        choices: ["View all Employees",'Add Employee', 'Update Employee', 'Delete Employee', 
+        'Add Department', 'View Departments', 'Add Role', 'View Role', 'View Employees by Manager']
     }];
 
-const employeePrompt = [
+const add_Employee = [
     {
-        type: "input",
-        message: "What is the first name of the employee",
-        name: "firstName",
-        default: "Peter"
+        type: 'input',
+        name: 'first_name',
+        message: 'What is the employees first name?'
+    },{
+        type: 'input',
+        name: 'last_name',
+        message: 'What is the employees last name?'
     },
     {
-        type: "input",
-        message: "What is the last name of the employee",
-        name: "lastName",
-        default: "Jackson"
+        type: 'input',
+        name: 'role_id',
+        message: 'What is the role_id for this employee?'
     },
     {
-        type: "input",
-        message: "What is the role ID of the employee?",
-        name: "roleId",
-        default: 100
-        
-    },
-    {
-        type: "input",
-        message: "What is the Id of the employee's manager?",
-        name: "managerId",
-        default: 100
-        
+        type: 'input',
+        name: 'manager_id',
+        message: 'What is the ID of the manager this employee reports to?'
     }
 ];
 
-const updateEmployeePrompt = [
-    {
-        type: "list",
-        message: "Select the employee you would like to update",
-        name: "employeeName",
-        choice: []
-    },
-    {   
-        type: "input",
-        message: "What is the employee's new role id?",
-        name: "newRole"
-    }
-];
 
-const rolePrompt = [
+const add_role = [
     {
-        type: "input",
-        message: "What is the name/title of the role?",
-        name: "role",
-    },
+        type:'input',
+        name: 'title',
+        message: "What is the title of this role?"
+    }, 
     {
-        type: "input",
-        message: "What is the salary of the role?",
-        name: "salary",
-    },
-    {
-        type: "input",
-        message: "What department does this role belong to?",
-        name: "roleDepartment"
-        
+        type: 'input',
+        name: 'salary',
+        message : 'What is the annual salary for this role?'
+    }, {
+        type: 'input',
+        name: 'department_id',
+        message: 'What department does this role fall under?'
     }
-];
+]
 
-const departmentPrompt = [
-    {
-        type: "input",
-        message: "What is the first name of the department",
-        name: "department",
-    }
-];
+const add_dept = [{
+    type: 'input',
+    name: "name",
+    message: "What is the name of the new Department?"
+}];
 
-function followupQuestions (answers) {
+function followUp (answers) {
     switch(answers.action) {
+
         case "Add Employee": 
              addEmployee();
             break;
-
+        
         case "Delete Employee":
             deleteEmployee();
             break;
@@ -95,7 +72,7 @@ function followupQuestions (answers) {
         case "Update Employee":
             updateEmployee();
             break;
-
+        
         case "Add Department":
             addDepartment();
             break;
@@ -105,15 +82,15 @@ function followupQuestions (answers) {
             break;
 
         case "View Employees by Manager":
-            viewEmployeeByManager();
+            viewByManager();
             break;
-
+        
         case "View all Employees":
-            console.table(viewAllEmployees());
+            employeeAll();
             break;
 
         case "View Role":
-            viewRoles();
+            roleAll();
             break;
 
         case "Add Role":
@@ -121,56 +98,170 @@ function followupQuestions (answers) {
             break;
     }
    
-};
+}
 
-function start() {
-    inquirer.prompt(startInquirer).then((startAnswers) => {
-        followupQuestions(startAnswers)
+
+
+function promptInquirer () {
+    inquirer.prompt(startInquire).then((startAnswers)=> {
+        console.log(startAnswers)
+        followUp(startAnswers)
     })
 };
 
-async function addEmployee() {
-    inquirer.prompt(employeePrompt).then((response) => {
-        query.insertEmployee(response, () => {
-            let employees = viewAllEmployees();
-            console.table(employees);
-        });
+async function addEmployee () {
+    const roleArray= await query.roleAll()
+    console.table(roleArray)
+    const managerArray = await query.managerQuery()
+    console.table(managerArray)
+    await inquirer.prompt(add_Employee).then((answers)=> {
+        console.log(answers)
+        query.employeeAdd(answers)
     })
+        
     
-};
-      
-async function deleteEmployee() {
-    
-};
-
-async function updateEmployee() {
+    const employeeArray = await query.employeeAll()
+    console.table(employeeArray)
+    promptInquirer()
     
 };
 
-async function addDepartment() {
+async function addDepartment () {
+    
+    await inquirer.prompt(add_dept).then((answers)=> {
+        console.log(answers)
+        query.departmentAdd(answers)
+    })
+        
+    
+    const departmentArray= await query.departmentAll()
+    console.table(departmentArray)
+    promptInquirer()
     
 };
 
-async function viewDepartments() {
+async function addRole () {
+    
+    const departmentArray= await query.departmentAll()
+    console.table(departmentArray)
+    await inquirer.prompt(add_role).then((answers)=> {
+        console.log(answers)
+        query.roleAdd(answers)
+    })
+        
+    
+    const roleArray= await query.roleAll()
+    console.table(roleArray)
+    
+    promptInquirer()
     
 };
 
-async function viewEmployeeByManager() {
-    
+async function viewByManager() {
+    const managerArray = await query.managerQuery()
+    console.table(managerArray)
+    const managerTable = managerArray.map(manager=>`${manager.first_name} ${manager.last_name}`)
+    const response = await inquirer.prompt([{
+            type: 'list',
+            name: 'id',
+            message: "Who is the manager you would like to view?",
+            choices: managerTable
+            }]).then( (answer) => {
+                
+                for (let i=0; i<managerTable.length; i++) {
+                    
+                    if(managerTable[i]=== answer.id) {
+                        
+                        return query.byManager(managerArray[i].id)
+                    }
+                }
+            }).then(response => 
+    console.table(response))
+    promptInquirer()
 };
 
-async function viewAllEmployees() {
-    let employees = await query.viewAllEmployees();
-    return (employees);
-    
+async function viewDepartments () {
+    const departmentArray= await query.departmentAll()
+   
+    console.table(departmentArray)
+    promptInquirer()
+
 };
 
-async function viewRoles() {
-    
+
+
+async function deleteEmployee () {
+    const employeeArray= await query.employeeAll()
+    const employeeTable = employeeArray.map(({id, first_name, last_name}) => ({
+        name: `${first_name} ${last_name}`,
+        number: id
+    }));
+    console.table(employeeTable)
+
+
+    const response = await inquirer.prompt([{
+        type: 'list',
+        name: 'id',
+        message: "Who is the employee you would like to delete?",
+        choices: employeeTable
+    }]);
+
+    const { number } = employeeTable.find(e => e.name === response.id);
+    console.log(number, "number")
+    await query.employeeDelete(number)
+    promptInquirer()
 };
 
-async function addRole() {
+
+async function updateEmployee () {
+    const employeeArray= await query.employeeAll()
+    const employeeTable = employeeArray.map(({id, first_name, last_name, title}) => ({
+        name: `${first_name} ${last_name}`,
+        title: `${ title }`,
+        employeeID: id
+    }));
+    console.table(employeeTable)
+    
+
+    const employeeUpdate = await inquirer.prompt([{
+        type: 'list',
+        name: 'id',
+        message: "Who is the employee you would like to update?",
+        choices: employeeTable
+    }]);
+
+
+    console.log(employeeTable)
+    const { employeeID } = employeeTable.find(e => e.name == employeeUpdate.id);
+    console.log(employeeID)
+
+    const updatedRole = await inquirer.prompt([{
+        name: 'role_id',
+        message: "What is the new role?"
+    }])
+    
+    await query.employeeUpdate(updatedRole, employeeID )
+    
+    
+    await employeeAll()
     
 };
+    
 
-start();
+
+async function employeeAll() {
+    console.log('init')
+    const employeeArray = await query.employeeAll()
+    console.table(employeeArray)
+    promptInquirer()
+
+}
+
+async function roleAll() {
+    const roleArray = await query.roleAll()
+    console.table(roleArray)
+    promptInquirer()
+
+}
+
+promptInquirer();
