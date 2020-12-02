@@ -14,6 +14,9 @@
   
 ## Description:
   Employee Tracker is a node.js application designed to help manage employees, allowing you to add/delete/update departments, managers, roles, salaries, and titles.
+
+  ![screenshot](employee-tracker-screenshot.png)
+
   ## Installation Instructions:
   
   1. Download [repository](https://github.com/kheller18/employee-tracker)
