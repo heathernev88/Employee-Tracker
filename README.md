@@ -19,7 +19,7 @@
 
   ## Installation Instructions:
   
-  1. Download [repository](https://github.com/kheller18/employee-tracker)
+  1. Download [repository](https://github.com/heathernev88/employee-tracker)
 
 	Git clone https://github.com/heathernev88/Employee-Tracker
   2. Install dependencies
